@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Ocurrences</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/resultPage.css">
+    <link rel="stylesheet" href="../static/css/Data.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Map.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/NavBar.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Animations.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Subtitle.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    
+    <div id="data">
+        <h2>Selected Data</h2>
+        <div class="selectedData">
+            <label><b>Selected File</b></label>
+            <p id="dataFilename">{{xlsFile}}</p>
+        </div>
+        <div class="selectedData">
+            <label><b>Selected Coordinates</b></label>
+            <dl>
+                <dt>N: {{n}}</dt>
+                <dt>S: {{s}}</dt>
+                <dt>E: {{e}}</dt>
+                <dt>W: {{w}}</dt>
+            </dl>
+        </div>
+        <label><b>Inside Box</b></label>
+        <br>
+        <div id="list-in">
+            <table id="in">
+
+            </table>
+        </div>
+        <br>
+        <label><b>Outside Box</b></label>
+        <br>
+        <div id="list-out">
+            <table id="out">
+
+            </table>
+        </div>
+    </div>
+    <div id="navigation">
+        <div id="icon_toggle">
+            <button id="menuButton">
+                <div></div>
+                <div></div>
+                <div></div>
+            </button>
+            <div id="menuLabel">
+            <div class="label"></div>
+            <div class="label">Data</div>
+            <div class="label"></div>
+            </div>
+        </div>
+        <nav id="navbar"><form>
+            <div>
+                <button class="abled" type="submit" formmethod="POST" formaction="\">
+                    <label>Select Sheet</label>
+                </button>
+            </div>
+            <div>
+                <button class="abled" type="submit" formmethod="POST" formaction="lerTabela">
+                    <label>Select Área</label>
+                </button>
+            </div>
+            <div>
+                <button class="abled" type="submit" formmethod="POST" formaction="selArea">
+                    <label>Select Table</label>
+                </button>
+            </div>
+            <div>
+            <button type="button" class="abled">
+                <label>Result</label>
+            </button>
+        </div>
+        </form></nav>
+    </div>
+    <div id="legend"><h4>Subtitle</h4></div>
+    <div id="map"></div>
+    <div class="container" id="container">
+        <div id="buttons"><form>
+            <button type="submit" id="select" formmethod="POST" formaction="selArea">Afterward</button>
+            <button type="submit" id="forward" formmethod="POST" formaction="/">Finish</button>
+        </form></div>
+    </div>
+<script>
+        var map = document.getElementById('map');
+        var container = document.getElementById('container');
+        var navigation = document.getElementById('navigation');
+        var data = document.getElementById('data');
+        var showing = false;
+        var markersPosition = {{ ocurrenceMarkers | tojson }};
+        var outBox = [];
+        var inBox = [];
+        var markers = [];
+        var previousLng = 0;
+        var init;
+        var previousLat = 0;
+        var parentList = {{ ocurrenceMarkers | tojson }};;
+        var childList = [];
+        var centerLat = (({{ n | tojson }} - {{ s | tojson }})/2)+{{ s | tojson }};
+        var centerLng = (({{ e | tojson }} - {{ w | tojson }})/2)+{{ w | tojson }};
+        var bounds = {north:{{ n | tojson }},south:{{ s | tojson }},east:{{ e | tojson }},west:{{ w | tojson }}}
+        var forward = document.getElementById('forward');
+        var addresses = [];
+
+        function init(){
+            init = new google.maps.Map(map, {
+                center: {lat: centerLat, lng: centerLng},
+                zoom:4
+            });
+
+            rectangle = new google.maps.Rectangle({
+                bounds: bounds,
+                strokeOpacity: 0.5,
+                fillOpacity: 0.00
+            });
+
+            init.fitBounds(bounds);
+            rectangle.setMap(init);
+
+
+            //Plot the markers in the Map and show specimes names on click markers.
+            plotMarkers(init);
+            windowsNames();
+
+
+            //Show subtitles on map
+            subtitles();
+
+
+            dataUpdate();
+            console.log(markersPosition[4]);
+        }
+
+        document.getElementById('menuButton').addEventListener('click', showData);
+
+
+        function showData() {
+            if(showing == false){
+                map.style.width = "70%";
+                map.style.cssFloat = "right";
+                map.style.marginRight = "0.5%";
+                map.style.marginLeft = "0";
+                container.style.width = "70%";
+                navigation.style.width = "70%";
+                data.style.display = "block";
+                showing = true;
+            }else if(showing == true){
+                map.style.width = "90%";
+                map.style.cssFloat = "left";
+                map.style.marginRight = "0";
+                map.style.marginLeft = "5%";
+                container.style.width = "90%";
+                navigation.style.width = "90%";
+                data.style.display = "none";
+                showing = false;
+            }
+        }
+
+        function dataUpdate() {
+            var inside = document.getElementById('in');
+            var outside = document.getElementById('out');
+
+            if (inBox.length == 0){
+                var item = document.createElement('dt');
+                item.append('There\'s not markers in box');
+                inside.append(item);
+            }else{
+                var header = document.createElement('tr');
+                var headerId = document.createElement('th');
+                headerId.append('ID');
+                var headerScientificName = document.createElement('th');
+                headerScientificName.append('Scientific Name');
+                var headerCity = document.createElement('th');
+                headerCity.append('City');
+                var headerState = document.createElement('th');
+                headerState.append('State');
+                var headerCountry = document.createElement('th');
+                headerCountry.append('Country');
+
+                header.append(headerId);
+                header.append(headerScientificName);
+                header.append(headerCity);
+                header.append(headerState);
+                header.append(headerCountry);
+                inside.append(header);
+
+                var cont = 0;
+                for(var i = 0; i < inBox.length; i++) {
+                    for (var j = 0; j < inBox[i].length; j++) {
+                        var idValue = inBox[i][j][0];
+                        var scientificNameValue = inBox[i][j][3];
+                        var cityValue = inBox[i][j][4];
+                        var stateValue = inBox[i][j][5];
+                        var countryValue = inBox[i][j][6];
+                        var item = document.createElement('tr');
+                        item.className = 'itemIn';
+                        item.id = idValue;
+
+                        var id = document.createElement('td');
+                        id.append(idValue);
+                        var scientificName = document.createElement('td');
+                        scientificName.append(scientificNameValue);
+                        var city = document.createElement('td');
+                        city.append(cityValue);
+                        var state = document.createElement('td');
+                        state.append(stateValue);
+                        var country = document.createElement('td');
+                        country.append(countryValue);
+                        item.append(id);
+                        item.append(scientificName);
+                        item.append(city);
+                        item.append(state);
+                        item.append(country);
+                        inside.append(item);
+                        cont++;
+                    }
+                }
+                var totalRow = document.createElement('tr');
+
+                var total = document.createElement('th');
+                var totalValue = document.createElement('th');
+                total.append('Total:');
+                totalValue.append(cont);
+
+                totalRow.append(total);
+                totalRow.append(totalValue);
+                inside.append(totalRow);
+            }
+
+            if (outBox.length == 0){
+                var item = document.createElement('dt');
+                item.append('There\'s not markers out of box');
+                outside.append(item);
+            }else{
+                var header = document.createElement('tr');
+                var headerId = document.createElement('th');
+                headerId.append('ID');
+                var headerScientificName = document.createElement('th');
+                headerScientificName.append('Scientific Name');
+                var headerCity = document.createElement('th');
+                headerCity.append('City');
+                var headerState = document.createElement('th');
+                headerState.append('State');
+                var headerCountry = document.createElement('th');
+                headerCountry.append('Country');
+
+                header.append(headerId);
+                header.append(headerScientificName);
+                header.append(headerCity);
+                header.append(headerState);
+                header.append(headerCountry);
+                outside.append(header);
+                var cont = 0;
+                for(var i = 0; i < outBox.length; i++) {
+                    for (var j = 0; j < outBox[i].length; j++) {
+                        var idValue = outBox[i][j][0];
+                        var scientificNameValue = outBox[i][j][3];
+                        var cityValue = outBox[i][j][4];
+                        var stateValue = outBox[i][j][5];
+                        var countryValue = outBox[i][j][6];
+                        var item = document.createElement('tr');
+                        item.className = 'itemIn';
+                        item.id = idValue;
+
+                        var id = document.createElement('td');
+                        id.append(idValue);
+                        var scientificName = document.createElement('td');
+                        scientificName.append(scientificNameValue);
+                        var city = document.createElement('td');
+                        city.append(cityValue);
+                        var state = document.createElement('td');
+                        state.append(stateValue);
+                        var country = document.createElement('td');
+                        country.append(countryValue);
+                        item.append(id);
+                        item.append(scientificName);
+                        item.append(city);
+                        item.append(state);
+                        item.append(country);
+                        outside.append(item);
+                        cont++;
+                    }
+                }
+                var totalRow = document.createElement('tr');
+
+                var total = document.createElement('th');
+                var totalValue = document.createElement('th');
+                total.append('Total:');
+                totalValue.append(cont);
+
+                totalRow.append(total);
+                totalRow.append(totalValue);
+                outside.append(totalRow);
+            }
+        }
+
+
+
+        function plotMarkers(init) {
+            for(var i = 0; i < parentList.length; i++){
+                var position = {lat: parentList[i][0][1], lng: parentList[i][0][2]};
+                if(i==0){
+                    var marker = new google.maps.Marker({
+                        position: position,
+                        map: init,
+                        clickable: true,
+                        icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 5,
+                                strokeWeight:1,
+                                strokeOpacity: 0.5,
+                                fillOpacity: 0.00,
+                                strokeColor:"#000000"
+                        },
+                        visible: true
+                        });
+                    markers.push(marker);
+                }else{
+                    var marker = new google.maps.Marker({
+                        position: position,
+                        map: init,
+                        clickable: true,
+                    });
+
+                    markers.push(marker);
+                }
+            }
+
+
+            for (var i = 0; i < markers.length; i++) {
+                var marker = markers[i];
+                var lat = marker.getPosition().lat()
+                var lng = marker.getPosition().lng()
+                markersPosition.push([lat,lng]);
+                if((lat>{{ n | tojson }})||(lat<{{ s | tojson }})||(lng>{{ e | tojson }})||(lng<{{ w | tojson }})){
+                    marker.setIcon("http://maps.google.com/mapfiles/ms/icons/red-dot.png");
+                    var poly = new google.maps.Polyline({
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 0.5,
+                        strokeWeight: 1,
+                        map: init,
+                    });
+                    outBox.push(parentList[i]);
+                    showPath(marker, poly);
+                }else{
+                    marker.setIcon("http://maps.google.com/mapfiles/ms/icons/green-dot.png");
+                    inBox.push(parentList[i]);
+                }
+            }
+        }
+
+        function showPath(marker, poly) {
+            var ne = rectangle.getBounds().getNorthEast();
+            var sw = rectangle.getBounds().getSouthWest();
+
+            var north = ne.lat();
+            var south = sw.lat();
+            var east = ne.lng();
+            var west = sw.lng();
+
+            var centerRectangleLat = ((north - south)/2)+south;
+            var centerRectangleLng = ((east - west)/2)+west;
+            var path = [{lat: centerRectangleLat, lng: centerRectangleLng}, marker.getPosition()];
+
+            poly.setPath(path);
+        }
+
+        function windowsNames(){
+            for(var j = 0; j < markers.length; j++){
+                var infoWindow = new google.maps.InfoWindow(), marker, j;
+                google.maps.event.addListener(markers[j], 'click', (function(marker, j) {
+                return function() {
+                    var add = "";
+                    for(var k = 0; k < parentList[j].length; k++){
+                        add = add + parentList[j][k][0] + "<br>"
+                        infoWindow.setContent('' + add);
+                    }
+                    infoWindow.open(init, markers[j]);
+                }
+                })(markers[j], j));
+            }
+        }
+
+        function subtitles(){
+            var outside = 0;
+            var inside = 0;
+            for(var i = 0; i < outBox.length; i++){
+                for(var j = 0; j < outBox[i].length; j++){
+                    outside++;
+                }
+            }
+            for(var i = 0; i < inBox.length; i++){
+                for(var j = 0; j < inBox[i].length; j++){
+                    inside++;
+                }
+            }
+            var iconBase = 'https://maps.google.com/mapfiles/ms/icons/';
+            var icons = {
+                        outBounds: {
+                                        name: 'Tombos fora do quadrante: '+ outside,
+                                        icon: iconBase + 'red-dot.png'
+                        },
+                        inBounds: {
+                                        name: 'Tombos dentro do quadrante: '+ inside,
+                                        icon: iconBase + 'green-dot.png'
+                        }
+                        };
+            var legend = document.getElementById('legend');
+            for (var key in icons) {
+                var type = icons[key];
+                var name = type.name;
+                var icon = type.icon;
+                var div = document.createElement('div');
+                    div.innerHTML = '<img src="' + icon + '">' + name + '<br><br>';
+                legend.appendChild(div);
+            }
+            init.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+        }
+
+
+</script>
+<script async defer
+    src="YOU_API_KEY">
+</script>
+</body>
+</html>

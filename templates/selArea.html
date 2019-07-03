@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Select Área</title>
+    <link rel="stylesheet" href="../static/css/selArea.css" type="text/css">
+    <link rel="stylesheet" type="text/css" href="../static/css/selSheet.css">
+    <link rel="stylesheet" href="../static/css/Map.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/NavBar.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Data.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Animation.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div id="data">
+        <h2>Selected Data</h2>
+        <div class="selectedData">
+            <label>Selected File</label>
+            <p id="dataFilename">{{xlsFile}}</p>
+        </div>
+        <div class="nonSelectedData" id="divDataCoordenates">
+            <label for="dataCoordinates">Selected Coordinates</label>
+            <p id="dataCoordinates">Nothing Selected Yet</p>
+        </div>
+        <div class="nonSelectedData">
+            <label for="dataList">List Selected</label>
+            <p id="dataList">Nothing Selected Yet</p>
+        </div>
+    </div>
+    <div id="navigation">
+        <div id="icon_toggle">
+            <button id="menuButton">
+                <div></div>
+                <div></div>
+                <div></div>
+            </button>
+            <div id="menuLabel">
+                <div class="label"></div>
+                <div class="label">Data</div>
+                <div class="label"></div>
+            </div>
+        </div>
+        <nav id="navbar"><form>
+            <div>
+                <button class="abled" type="submit" formmethod="POST" formaction="\">
+                    <label>Select Sheet</label>
+                </button>
+            </div>
+            <div>
+                <button class="abled" type="button">
+                    <label>Select Área</label>
+                </button>
+            </div>
+            <div>
+                <button disabled>
+                    <label>Select Table</label>
+                </button>
+            </div>
+            <div>
+            <button disabled>
+                <label>Result</label>
+            </button>
+        </div>
+        </form></nav>
+    </div>
+    <input id="inputPlaces" class="controls" type="text" placeholder="Procurar por nome">
+    <div id="map"></div>
+    <div class="container" id="container">
+        <form id="form" action="/selArea" method="POST" enctype="multipart/form-data">
+            <label>Select your research field by coordinates</label>
+            <input type="text" id="file" name="xlsFile" readonly accept=".xls">
+            <br>
+            <input type="number" step="0.00000000000000001" class="latitude" id='n' name="norte" placeholder="Norte">
+            <input type="number" step="0.00000000000000001" class="latitude" id='s' name="sul" placeholder="Sul">
+            <input type="number" step="0.00000000000000001" class="longitude" id='e' name="leste" placeholder="Leste">
+            <input type="number" step="0.00000000000000001" class="longitude" id='w' name="oeste" placeholder="Oeste">
+            <div id="buttons">
+                <button type="submit" id="back" formmethod="POST" formaction="/">Afterward</button>
+                <button type="button" id="select">Confirm Area</button>
+                <button type="submit" id="forward" disabled>Forward</button>
+            </div>
+        </form>
+    </div>
+    <script>
+            var map = document.getElementById('map');
+            var container = document.getElementById('container');
+            var navbar = document.getElementById('navbar');
+            var navigation = document.getElementById('navigation');
+            var form = document.getElementById('form');
+            var sheet = document.getElementById('file');
+            sheet.value = {{ xlsFile | tojson }};
+            var data = document.getElementById('data');
+            var showing = false;
+            var rectangle;
+            var init;
+            var info;
+            var windowOpen = true;
+            var x = document.getElementById('n');
+            var s = document.getElementById('s');
+            var l = document.getElementById('e');
+            var o = document.getElementById('w');
+            var change = false;
+            var enviar = document.getElementById('forward');
+            enviar.disabled = true;
+            var criado = false;
+            var erro = {{ erro }};
+    
+            function initMap(){
+                var input = document.getElementById('inputPlaces');
+                var searchBox = new google.maps.places.SearchBox(input);
+                
+                    init = new google.maps.Map(map, {
+                    center: {lat: -15.7744227, lng: -48.0772903},
+                    zoom:4
+                    });
+
+                    rectangle = new google.maps.Rectangle({
+                    bounds: {north:-14.390974736656162,south:-17.013638805715484,east:-46.407368425000016,west:-49.219868425000016},
+                    editable: true,
+                    draggable:true
+                    });
+
+                    init.controls[google.maps.ControlPosition.TOP_CENTER].push(input);
+                    init.addListener('bounds_changed', function() {
+                        searchBox.setBounds(init.getBounds());
+                    });
+                    
+                    searchBox.addListener('places_changed', function(){
+                        var places = searchBox.getPlaces();
+                        console.log(places)
+                        if (places.length == 0) {
+                            return;
+                        }
+                
+                        var bounds = new google.maps.LatLngBounds();
+                        places.forEach(function(place) {
+                            if (!place.geometry) {
+                                console.log("Returned place contains no geometry");
+                                return;
+                            }
+
+                            if (place.geometry.viewport) {
+                                bounds.union(place.geometry.viewport);
+                            } else {
+                                bounds.extend(place.geometry.location);
+                            }
+                        });
+
+                        init.fitBounds(bounds);
+                        rectangle.setBounds(bounds);
+                    });
+
+                    rectangle.setMap(init);
+                    rectangle.addListener('bounds_changed', rectanBounds);
+
+                    if(change == false){
+                        x.value = -14.390974736656162;
+                        
+                        s.value = -17.013638805715484;
+                        
+                        l.value = -46.407368425000016;
+                        
+                        o.value = -49.219868425000016;
+                    }
+
+                    info = new google.maps.InfoWindow();
+                    var ne = rectangle.getBounds().getNorthEast();
+                    var aviso = "This rectangle can be used to select your research field.";
+                    info.setContent(aviso);
+                    info.setPosition(ne);
+                    info.open(init);
+
+                    if(erro){
+                        alert('Select an valid research place.');
+                    }
+
+            }
+    
+            document.getElementById('menuButton').addEventListener('click', showData);
+            document.getElementById('select').onclick = function(){
+                var floatN = parseFloat(x.value);
+                var floatS = parseFloat(s.value);
+                var floatL = parseFloat(l.value);
+                var floatO = parseFloat(o.value);
+
+                if(floatL < floatO){
+                    var auxHorizontal = floatL;
+                    floatL = floatO;
+                    floatO = auxHorizontal;
+                }
+
+                if(floatN < floatS){
+                    var auxVertical = floatN;
+                    floatN = floatS;
+                    floatS = auxVertical;
+                }
+
+                var centerLat = (floatN + floatS)/2;
+                var centerLng = (floatL + floatO)/2;
+                var bounds = {north:floatN,south:floatS,east:floatL,west:floatO};
+
+                init.setCenter(new google.maps.LatLng(centerLat, centerLng));
+                init.fitBounds(bounds);
+                rectangle.setBounds(bounds);
+                enviar.disabled = false;
+
+                console.log(sheet.value);
+
+                dataUpdate(floatN, floatS, floatL, floatO);
+            }
+
+            
+            
+    
+            function showData() {
+                if(showing == false){
+                    map.style.width = "70%";
+                    map.style.cssFloat = "right";
+                    map.style.marginRight = "0.5%";
+                    map.style.marginLeft = "0";
+                    container.style.width = "70%";
+                    navigation.style.width = "70%";
+                    data.style.display = "block";
+                    dataUpdate();
+                    showing = true;
+                }else if(showing == true){
+                    map.style.width = "90%";
+                    map.style.cssFloat = "left";
+                    map.style.marginRight = "0";
+                    map.style.marginLeft = "5%"; 
+                    container.style.width = "90%";
+                    navigation.style.width = "90%";
+                    data.style.display = "none";
+                    showing = false;
+                }
+            }
+    
+            function dataUpdate(n,s,e,w) {
+                if((n == undefined)||(s == undefined)||(e == undefined)||(w == undefined)){
+                    var dataCoordinates = document.getElementById('dataCoordinates');
+                    dataCoordinates.innerHTML = '<dl>'+
+                                                    '<dt>'+'N: '+'Nothing Selected Yet'+'</dd>'+
+                                                    '<dt>'+'S: '+'Nothing Selected Yet'+'</dd>'+
+                                                    '<dt>'+'E: '+'Nothing Selected Yet'+'</dd>'+
+                                                    '<dt>'+'W: '+'Nothing Selected Yet'+'</dd>'+
+                                                 '</dl>';
+                }else{
+                    var dataCoordinates = document.getElementById('dataCoordinates');
+                    dataCoordinates.innerHTML = '<dl>'+
+                                                    '<dt>'+'N: '+n+'</dt>'+
+                                                    '<dt>'+'S: '+s+'</dt>'+
+                                                    '<dt>'+'E: '+e+'</dt>'+
+                                                    '<dt>'+'W: '+w+'</dt>'+
+                                                 '</dl>';
+                    var divDataCoordenates = document.getElementById('divDataCoordenates');
+                    if(divDataCoordenates.className == 'nonSelectedData'){
+                        divDataCoordenates.className = 'selectedData';
+                    }
+                }
+
+            }
+
+            function rectanBounds(event) {
+                var ne = rectangle.getBounds().getNorthEast();
+                var sw = rectangle.getBounds().getSouthWest();
+
+                var north = ne.lat();
+                var south = sw.lat();
+                var east = ne.lng();
+                var west = sw.lng();
+
+                if ((north||south||east||west)!=''){
+                    x.value = north;
+                    s.value = south;
+                    l.value = east;
+                    o.value = west;
+                }else{
+                    x.value = 'erro';
+                    s.value = 'erro';
+                    l.value = 'erro';
+                    o.value = 'erro';
+                }
+
+                if (windowOpen == true){
+                    info.close(init);
+                    enviar.disabled = true;
+                }
+                change = true;
+
+            }
+
+    </script>
+<script async defer
+            src="YOU_API_KEY">
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" >
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Selecionar Planilha</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/selSheet.css">
+    <link rel="stylesheet" href="../static/css/Map.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/NavBar.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Data.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Animation.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div id="data">
+        <h2>Selected Data</h2>
+        <div class="nonSelectedData" id="divFilename">
+            <label>Selected File</label>
+            <p id="dataFilename">Nothing Selected Yet</p>
+        </div>
+        <div class="nonSelectedData">
+            <label for="dataCoordinates">Selected Coordinates</label>
+            <p id="dataCoordinates">Nothing Selected Yet</p>
+        </div>
+        <div class="nonSelectedData">
+            <label for="dataList">List Selected</label>
+            <p id="dataList">Nothing Selected Yet</p>
+        </div>
+    </div>
+    <div id="navigation">
+        <div id="icon_toggle">
+            <button id="menuButton">
+                <div></div>
+                <div></div>
+                <div></div>
+            </button>
+            <div id="menuLabel">
+            <div class="label"></div>
+            <div class="label">Data</div>
+            <div class="label"></div>
+            </div>
+        </div>
+        <nav id="navbar">
+            <div>
+                <button class="abled" type="button">
+                    <label>Select Sheet</label>
+                </button>
+            </div>
+            <div>
+                <button disabled>
+                    <label>Select Área</label>
+                </button>
+            </div>
+            <div>
+                <button disabled>
+                    <label>Select Table</label>
+                </button>
+            </div>
+            <div>
+                <button disabled>
+                    <label>Result</label>
+                </button>
+            </div>
+        </nav>
+    </div>
+    <div id="map"></div>
+    <div class="container" id="container">
+        <form id="form" action="/lerTabela" method="POST" enctype="multipart/form-data">
+        <label for="xlsFile">Select the file to be analyzed.</label>
+        <br>
+        <input type="file" name="xlsFile" id="xlsFile" accept=".xls">
+        <input type="text" id="fakefile" readonly>
+        <br>
+        <div id="buttons">
+            <button type="button" id="select">Select file</button>
+            <button type="submit" id="forward">Forward</button>
+        </div>
+        </form>
+    </div>
+
+
+<script>
+        var map = document.getElementById('map');
+        var begin = document.getElementById('begin');
+        var container = document.getElementById('container');
+        var navbar = document.getElementById('navbar');
+        var navigation = document.getElementById('navigation');
+        var form = document.getElementById('form');
+        var file = document.getElementById('xlsFile');
+        var sheet = document.getElementById('fakefile');
+        var data = document.getElementById('data');
+        var showing = false;
+        var erro = {{ erro }};
+
+
+        function initMap(){
+            var init = new google.maps.Map(map, {
+                center: {lat: -15.7744227, lng: -48.0772903},
+                zoom:4
+            });
+
+
+            if(erro){
+                alert('Select a xls file');
+            }
+        }
+
+        document.getElementById('menuButton').addEventListener('click', showData);
+        file.addEventListener('change', showSheet);
+        file.addEventListener('change', dataUpdate);
+        document.getElementById('select').addEventListener('click', submit_form);
+
+
+        function submit_form() {
+            file.click();
+			file.addEventListener('change', function(){
+			    var filename = file.value;
+				sheet.value = filename;
+			});
+
+        }
+
+
+        function showData() {
+            if(showing == false){
+                map.style.width = "70%";
+                map.style.cssFloat = "right";
+                map.style.marginRight = "0.5%";
+                map.style.marginLeft = "0";
+                container.style.width = "70%";
+                navigation.style.width = "70%";
+                data.style.display = "block";
+                showing = true;
+            }else if(showing == true){
+                map.style.width = "90%";
+                map.style.cssFloat = "left";
+                map.style.marginRight = "0";
+                map.style.marginLeft = "5%";
+                container.style.width = "90%";
+                navigation.style.width = "90%";
+                data.style.display = "none";
+                showing = false;
+            }
+        }
+
+        function dataUpdate() {
+            var dataFilename = document.getElementById('dataFilename');
+            var selectedFilename = file.files.item(0).name;
+            var splitFilename = selectedFilename.split('.');
+            dataFilename.innerHTML = splitFilename[0];
+            var divFilename = document.getElementById('divFilename');
+            if(divFilename.className == 'nonSelectedData'){
+                divFilename.className = 'selectedData';
+            }
+        }
+
+        function showSheet() {
+            sheet.style.visibility = "visible";
+        }
+
+
+</script>
+<script async defer
+    src="YOUR_API_KEY">
+</script>
+</body>
+</html>

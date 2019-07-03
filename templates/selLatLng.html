@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Select Lat and Lng</title>
+    <link rel="stylesheet" href="../static/css/selLatLng.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Data.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Map.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/NavBar.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/Animations.css" type="text/css">
+</head>
+<body>
+    <div id="data">
+       <h2>Selected Data</h2>
+        <div class="selectedData">
+            <label>Selected File</label>
+            <p id="dataFilename">{{xlsFile}}</p>
+        </div>
+        <div class="selectedData">
+            <label>Selected Coordinates</label>
+            <dl>
+                <dt>N: {{n}}</dt>
+                <dt>S: {{s}}</dt>
+                <dt>E: {{e}}</dt>
+                <dt>W: {{w}}</dt>
+            </dl>
+        </div>
+        <div class="nonSelectedData">
+            <label for="dataList">List Selected</label>
+            <p id="dataList">Nothing Selected Yet</p>
+        </div>
+    </div>
+    </div>
+    <div id="navigation">
+        <div id="icon_toggle">
+            <button id="menuButton">
+                <div></div>
+                <div></div>
+                <div></div>
+            </button>
+            <div id="menuLabel">
+                <div class="label"></div>
+                <div class="label">Data</div>
+                <div class="label"></div>
+            </div>
+        </div>
+        <nav id="navbar"><form>
+            <div>
+                <button class="abled" type="submit" formmethod="POST" formaction="\">
+                    <label>Select Sheet</label>
+                </button>
+            </div>
+            <div>
+                <button class="abled" type="submit" formmethod="POST" formaction="lerTabela">
+                    <label>Select Área</label>
+                </button>
+            </div>
+            <div>
+                <button class="abled" type="button">
+                    <label>Select Table</label>
+                </button>
+            </div>
+            <div>
+            <button disabled>
+                <label>Result</label>
+            </button>
+        </div>
+        </form></nav>
+    </div>
+        <div id="map"></div>
+        <div class="container" id="container">
+            <form id="form" action="/plotar" method="POST" enctype="multipart/form-data">
+                <div class="opcoes" id="genus">
+                    Select the Genus:
+                    <br><br>
+                    <div class="scrollmenu">
+
+                    {% for i in range(max) %}
+                    <div class="header">
+                        <input type="radio" class="header" name="genus" value={{values[i+1]}}><label for="genus">{{ header[i+1] }}</label>
+                    </div>
+                    {% endfor %}
+                    </div>
+                </div>
+                <br>
+            <div class="opcoes" id="epithet">
+                Select the Species:
+                <br><br>
+                <div class="scrollmenu">
+
+                {% for i in range(max) %}
+                    <div class="header">
+                        <input type="radio" class="header" name="species" value={{values[i+1]}}><label for="latitude">{{ header[i+1] }}</label>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+            <br>
+            <div class="opcoes" id="latitude">
+                Select the Latitude:
+                <br><br>
+                <div class="scrollmenu">
+
+                {% for i in range(max) %}
+                    <div class="header">
+                        <input type="radio" class="header" name="latitude" value={{values[i+1]}}><label for="latitude">{{ header[i+1] }}</label>
+                    </div>
+                {% endfor %}
+                </div>
+
+            </div>
+            <br>
+            <div class="opcoes" id="longitude">
+                Select the Longitude:
+                <br><br>
+                <div class="scrollmenu">
+                {% for i in range(max) %}
+                    <div class="header">
+                        <input type="radio" class="header" name="longitude" value={{values[i+1]}}><label for="longitude">{{ header[i+1] }}</label>
+                    </div>
+                {% endfor %}
+                </div>
+
+            </div>
+            <div id="preenchidos">
+            <input type="text" id="file" name="xlsFile" readonly accept=".xls">
+
+            <br>
+            <input type="text" class="latitude" id='n' name="norte" placeholder="Norte">
+            <input type="text" class="latitude" id='s' name="sul" placeholder="Sul">
+            <input type="text" class="longitude" id='e' name="leste" placeholder="Leste">
+            <input type="text" class="longitude" id='w' name="oeste" placeholder="Oeste">
+        </div>
+            <br>
+            <div id="buttons">
+                <button type="submit" id="back" formmethod="POST" formaction="lerTabela">Afterward</button>
+                <button type="submit" id="forward">Forward</button>
+            </div>
+            </form>
+    </div>
+
+    <script>
+        var north;
+        var south;
+        var east;
+        var west;
+        var rectangle;
+        var infoWindow;
+        var map = document.getElementById('map');
+        var begin = document.getElementById('begin');
+        var container = document.getElementById('container');
+        var navbar = document.getElementById('navbar');
+        var navigation = document.getElementById('navigation');
+        var form = document.getElementById('form');
+        var sheet = document.getElementById('file');
+        var data = document.getElementById('data');
+        var showing = false;
+        var bounds = {north:{{ n | tojson}},south:{{ s | tojson }},east:{{ e | tojson }},west:{{ w | tojson }}};
+        var erro = {{ erro }};
+
+        function initMap(){
+            var init = new google.maps.Map(map, {
+                center: {lat: -15.7744227, lng: -48.0772903},
+                zoom:4
+            });
+
+            rectangle = new google.maps.Rectangle({
+                bounds: bounds
+            });
+
+
+            var ne= rectangle.getBounds().getNorthEast();
+            var sw= rectangle.getBounds().getSouthWest();
+
+            //Pega os 4 limites do retangulo
+            north = ne.lat();
+            south = sw.lat();
+            east = ne.lng();
+            west = sw.lng();
+
+
+            var x = document.getElementById('n');
+            x.value = north;
+            var s = document.getElementById('s');
+            s.value = south;
+            var l = document.getElementById('e');
+            l.value = east;
+            var o = document.getElementById('w');
+            o.value = west;
+
+            var p = document.getElementById('file');
+            p.value = {{ xlsFile | tojson }};
+
+
+
+            rectangle.setMap(init);
+            init.fitBounds(bounds);
+
+            if(erro){
+                alert('Select an valid column for Latitude and Longitude');
+            }
+
+        }
+
+        document.getElementById('menuButton').addEventListener('click', showData);
+
+
+        function showData() {
+            if(showing == false){
+                map.style.width = '70%';
+                map.style.cssFloat = "right";
+                map.style.margin = "auto";
+                container.style.width = "70%";
+                navigation.style.width = "70%";
+                data.style.display = "block";
+                showing = true;
+            }else if(showing == true){
+                map.style.width = "90%";
+                map.style.cssFloat = "left";
+                map.style.marginRight = "0";
+                map.style.marginLeft = "5%"; 
+                container.style.width = "90%";
+                navigation.style.width = "90%";
+                data.style.display = "none";
+                showing = false;
+            }
+        }
+
+
+        
+
+    </script>
+    <script async defer
+    src="YOU_API_KEY">
+    </script>
+</body>

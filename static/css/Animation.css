@@ -1,0 +1,25 @@
+.container {
+  position: relative;
+  -webkit-animation-name: container;
+  -webkit-animation-duration: 1s;
+  animation-name: container;
+  animation-duration: 1s
+}
+
+@-webkit-keyframes container {
+  from { bottom:-100px; opacity:0 }
+  to { bottom:0px; opacity:1 }
+}
+
+#map{
+    position: relative;
+    -webkit-animation-name: map;
+    -webkit-animation-duration: 1s;
+    animation-name: map;
+    animation-duration: 1s;
+}
+
+@-webkit-keyframes map {
+    from { bottom:-100px; opacity:0 }
+    to { bottom:0px; opacity:1 }
+  }

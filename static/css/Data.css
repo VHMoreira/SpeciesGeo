@@ -1,0 +1,64 @@
+#data{
+    width: 29%;
+    height: 100%;
+    position: relative;
+    background-color: #e5e5e5;
+    display: none;
+    float: left;
+    overflow-y: auto;
+    color: black;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#data div{
+    width: 100%;
+    font-size: 100%;
+}
+
+.nonSelectedData{
+    opacity:0.5;
+}
+
+.selectedData{
+    opacity:1;
+}
+
+.selectedData dl, .selectedData p{
+    color:green;
+}
+
+#list-out{
+    margin: 0 auto;
+    height: 30%;
+    max-height: 200px;
+    width: 90%;
+    overflow-y: auto;
+    color: red;
+    margin-bottom: 20px;
+}
+
+#list-in{
+    margin: 0 auto;
+    height 30%;
+    max-height: 200px;
+    width: 90%;
+    overflow-y: auto;
+    color: green;
+    margin-bottom: 20px;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}

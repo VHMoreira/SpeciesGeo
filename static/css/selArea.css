@@ -1,0 +1,85 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #0f314b;
+    text-align: center;
+    position: relative;
+}
+
+
+.container{
+    width: 90%;
+    height: 50%;
+    margin-top: 1%;
+    display: inline-block;
+}
+
+.container #form{
+    text-align: center;
+    background-color: rgb(228, 225, 225);
+    border-radius: 10px;
+    padding-top: 2%;
+    padding-bottom: 2%;
+    width: 100%;
+}
+
+
+.container label{
+    color: #0f314b;
+    width: 100%;
+    font-size: 100%;
+}
+
+.container #file{
+    visibility: hidden;
+    position: absolute;
+}
+
+.container button{
+	border: 1px solid #0f314b;
+    border-radius: 5px;
+    background-color: #0f314b;
+    color: aliceblue;
+	padding: 0.5%;
+}
+
+.container #forward:disabled{
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.container #forward:active{
+    opacity: 1;
+    cursor: pointer;
+}
+
+.container button:hover{
+	cursor:pointer;
+    background-color: rgb(127, 216, 238);
+    border: 1px solid rgb(127, 216, 238);
+    color: #0f314b;
+}
+
+.container .latitude{
+    display: inline-block;
+    width: 40%;
+    height: 10%;
+    font-size: 100%;
+    margin-top: 1%;
+}
+
+.container .longitude{
+    display: inline-block;
+    width: 40%;
+    height: 10%;
+    font-size: 100%;
+    margin-top: 1%;
+    margin-bottom: 1%;
+}
+
+.controls{
+    width:60%;
+    margin-top:1%;
+}

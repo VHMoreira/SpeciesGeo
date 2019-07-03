@@ -1,0 +1,106 @@
+#navigation{
+    text-align: center;
+    width: 90%;
+    background-color: transparent;
+    height: 10%;
+    display: inline-block;
+    padding: 0.5%;
+    overflow: hidden;
+    position: relative;
+}
+
+#navbar{
+    float: right;
+    /*! margin-right: 6%; */
+    background-color: transparent;
+    display: inline-block;
+    height: 100%;
+}
+
+#navbar form{
+    width: 100%;
+    height: 100%;
+}
+
+#navbar div{
+    display: inline-block;
+    color: aliceblue;
+    height: 100%;
+}
+
+#navbar button{
+    background-color: transparent;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    font-size: 100%;
+    margin-bottom: 1%;
+    margin-right: 0;
+    color: aliceblue;
+}
+
+#navbar button:disabled{
+    color: rgb(127, 216, 238);
+}
+
+#navbar .abled{
+    color: aliceblue;
+}
+
+#navbar .abled:hover{
+    color:rgb(127, 216, 238);
+    cursor: pointer;
+}
+
+#navbar .abled label:hover{
+    cursor: pointer;
+}
+
+#icon_toggle{
+  /*! width: 10%; */
+  display: inline-block;
+  float: left;
+  height: 100%;
+  /*! padding:0.1%; */
+  min-width: 90px;
+  max-width: 20%;
+  min-height: 30px;
+  max-height: 100%;
+}
+
+#icon_toggle button div{
+    background-color: rgb(127, 216, 238);
+    width: 35px;
+    height: 5px;
+    margin: 6px 0;
+}
+
+#icon_toggle .label{
+    color: aliceblue;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 100%;
+    width: 50%;
+    height: 33%;
+}
+
+#menuLabel{
+    display: inline;
+    float: left;
+    height: 100%;
+    margin-left: 2px;
+}
+
+#icon_toggle button{
+    float: left;
+    background-color: transparent;
+    border: 0px;
+    color:#0f314b;
+    height: 100%;
+    width: 50%;
+    padding: 0%;
+    text-align: center;
+}
+
+#icon_toggle button:hover{
+	cursor:pointer;
+}
