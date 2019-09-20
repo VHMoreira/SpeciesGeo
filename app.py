@@ -2,8 +2,8 @@ import os
 import googlemaps
 from flask import Flask, request, render_template, url_for
 from werkzeug.utils import secure_filename
-from Map import Ocurrence, CoordinatesConversor
-from SpreadSheet import SpreadSheet
+from SpeciesGeo.Map import Ocurrence, CoordinatesConversor
+from SpeciesGeo.SpreadSheet import SpreadSheet
 
 UPLOAD_FOLDER = 'static/uploads'
 typeDocument = {'xls'}
